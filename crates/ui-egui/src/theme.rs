@@ -79,41 +79,40 @@ const fn hex(rgb: u32) -> Color32 {
 impl Tokens {
     pub const DARK: Self = Self {
         dark: true,
-        bg: hex(0x121316),
-        sunken: hex(0x060607),
-        ink: hex(0xf2f1ee),
+        bg: hex(0x0c0f17),
+        sunken: hex(0x131824),
+        ink: hex(0xf1f5f9),
         ink_strong: hex(0xffffff),
-        muted: ink_alpha(0xf2f1ee, 153),
-        faint: ink_alpha(0xf2f1ee, 97),
-        line: ink_alpha(0xf2f1ee, 38),
-        line_strong: ink_alpha(0xf2f1ee, 102),
-        accent: hex(0x2d81ff),
-        accent_ink: hex(0x74aaff),
+        muted: hex(0x94a3b8),
+        faint: hex(0x64748b),
+        line: ink_alpha(0xf1f5f9, 28),
+        line_strong: ink_alpha(0xf1f5f9, 56),
+        accent: hex(0x3b82f6),
+        accent_ink: hex(0x60a5fa),
         invert_bg: hex(0xffffff),
-        invert_fg: hex(0x0b0b0c),
-        // PdfCraft's and LightCraft's inks, so status colours come from the site's palette.
-        good: hex(0x3fd6b8),
-        warn: hex(0xffc14d),
-        bad: hex(0xff6259),
+        invert_fg: hex(0x0c0f17),
+        good: hex(0x34d399),
+        warn: hex(0xfbbf24),
+        bad: hex(0xf87171),
     };
 
     pub const LIGHT: Self = Self {
         dark: false,
-        bg: hex(0xf2f1ee),
-        sunken: hex(0xe9e8e4),
-        ink: hex(0x101014),
-        ink_strong: hex(0x000000),
-        muted: ink_alpha(0x101014, 158),
-        faint: ink_alpha(0x101014, 107),
-        line: ink_alpha(0x101014, 41),
-        line_strong: ink_alpha(0x101014, 102),
-        accent: hex(0x2d81ff),
-        accent_ink: hex(0x1659c4),
-        invert_bg: hex(0x101014),
-        invert_fg: hex(0xf2f1ee),
-        good: hex(0x0a7563),
-        warn: hex(0x8a5800),
-        bad: hex(0xb3261e),
+        bg: hex(0xf8fafc),
+        sunken: hex(0xf1f5f9),
+        ink: hex(0x0f172a),
+        ink_strong: hex(0x020617),
+        muted: hex(0x64748b),
+        faint: hex(0x94a3b8),
+        line: ink_alpha(0x0f172a, 32),
+        line_strong: ink_alpha(0x0f172a, 70),
+        accent: hex(0x2563eb),
+        accent_ink: hex(0x1d4ed8),
+        invert_bg: hex(0x0f172a),
+        invert_fg: hex(0xf8fafc),
+        good: hex(0x059669),
+        warn: hex(0xd97706),
+        bad: hex(0xdc2626),
     };
 
     pub fn get(ctx: &egui::Context) -> Self {
@@ -130,7 +129,7 @@ impl Tokens {
     }
 }
 
-/// Mixes `c` into the background at `alpha` (0â€“1): tinted washes.
+/// Mixes `c` into the background at `alpha` (0–1): tinted washes.
 pub fn tint(c: Color32, alpha: f32) -> Color32 {
     let a = (alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
     Color32::from_rgba_unmultiplied(c.r(), c.g(), c.b(), a)
@@ -142,7 +141,7 @@ pub fn rgb(c: [u8; 3]) -> Color32 {
 
 /// The shadow under menus, dialogs and toasts.
 pub fn shadow(t: &Tokens) -> egui::epaint::Shadow {
-    egui::epaint::Shadow { offset: [0, 8], blur: 24, spread: 0, color: Color32::from_black_alpha(if t.dark { 140 } else { 36 }) }
+    egui::epaint::Shadow { offset: [0, 8], blur: 24, spread: 0, color: Color32::from_black_alpha(if t.dark { 160 } else { 40 }) }
 }
 
 /// The dim over the page behind a drawer; `amount` runs from 0 (none) to 1.
@@ -175,8 +174,8 @@ fn visuals(t: &Tokens) -> Visuals {
     v.faint_bg_color = t.sunken;
     v.code_bg_color = t.sunken;
     v.window_stroke = Stroke::new(1.0, t.line_strong);
-    v.window_corner_radius = CornerRadius::ZERO;
-    v.menu_corner_radius = CornerRadius::ZERO;
+    v.window_corner_radius = CornerRadius::same(12);
+    v.menu_corner_radius = CornerRadius::same(8);
     v.window_shadow = shadow(t);
     v.popup_shadow = shadow(t);
     v.override_text_color = Some(t.ink);
@@ -187,15 +186,15 @@ fn visuals(t: &Tokens) -> Visuals {
     v.error_fg_color = t.bad;
     for (w, fill, stroke, fg) in [
         (&mut v.widgets.noninteractive, t.bg, t.line, t.muted),
-        (&mut v.widgets.inactive, t.bg, t.line, t.ink),
-        (&mut v.widgets.hovered, t.sunken, t.line_strong, t.ink_strong),
-        (&mut v.widgets.active, t.sunken, t.line_strong, t.ink_strong),
+        (&mut v.widgets.inactive, t.sunken, t.line, t.ink),
+        (&mut v.widgets.hovered, t.sunken.lerp_to_gamma(t.ink, 0.08), t.line_strong, t.ink_strong),
+        (&mut v.widgets.active, t.sunken.lerp_to_gamma(t.ink, 0.12), t.line_strong, t.ink_strong),
         (&mut v.widgets.open, t.sunken, t.line_strong, t.ink_strong),
     ] {
         w.bg_fill = fill;
         w.weak_bg_fill = fill;
         w.bg_stroke = Stroke::new(1.0, stroke);
-        w.corner_radius = CornerRadius::ZERO;
+        w.corner_radius = CornerRadius::same(8);
         w.fg_stroke = Stroke::new(1.0, fg);
         w.expansion = 0.0;
     }

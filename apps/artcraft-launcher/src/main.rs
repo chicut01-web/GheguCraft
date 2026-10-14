@@ -41,7 +41,7 @@ fn main() -> ExitCode {
     artcraft_launcher_ui_egui::i18n::detect_system_lang_in_background();
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("artcraft-launcher {}", env!("CARGO_PKG_VERSION"));
+        println!("ghegucraft {}", env!("CARGO_PKG_VERSION"));
         return ExitCode::SUCCESS;
     }
     let mut hidden = args.iter().any(|a| a == login::HIDDEN_FLAG);
@@ -58,7 +58,7 @@ fn main() -> ExitCode {
     if let Some(logs) = logs {
         match artcraft_launcher_native::paths::Paths::new() {
             Ok(paths) => match logs.attach_dir(&paths.logs()) {
-                Ok(path) => log::info!("ArtCraft Launcher {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
+                Ok(path) => log::info!("GheguCraft {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
                 Err(e) => {
                     logs.no_file();
                     log::warn!("no log file: {e}");
@@ -104,7 +104,7 @@ fn main() -> ExitCode {
             let result = {
                 let (waker, launcher) = (waker.clone(), &mut launcher);
                 eframe::run_native(
-                    "ArtCraft Launcher",
+                    "GheguCraft",
                     native_options(hidden),
                     Box::new(move |cc| {
                         launcher.open(cc, &waker);
@@ -133,7 +133,7 @@ fn native_options(hidden: bool) -> eframe::NativeOptions {
     let icon =
         eframe::icon_data::from_png_bytes(include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.artcraft-launcher.png")).ok();
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("ArtCraft Launcher")
+        .with_title("GheguCraft")
         .with_app_id(APP_ID)
         .with_inner_size([1120.0, 760.0])
         .with_min_inner_size([720.0, 500.0])

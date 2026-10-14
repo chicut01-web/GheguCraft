@@ -85,7 +85,7 @@ pub fn eyebrow(ui: &mut Ui, index: &str, label: &str) {
 pub fn tag(ui: &mut Ui, text: &str, fill: Color32, ink: Color32) -> Response {
     let galley = caps(ui, text, theme::HUD_SIZE, theme::mono_bold(), theme::HUD_SPACING, ink);
     let (rect, resp) = ui.allocate_exact_size(galley.size() + vec2(16.0, 8.0), Sense::hover());
-    ui.painter().rect_filled(rect, CornerRadius::ZERO, fill);
+    ui.painter().rect_filled(rect, CornerRadius::same(5), fill);
     paint_centred(ui, rect, galley, ink);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, text));
     resp
@@ -101,14 +101,17 @@ pub fn rule(ui: &mut Ui, height: f32) {
 /// A header link, like the site's nav: a mono label whose span inverts on hover or when `active`.
 pub fn nav_link(ui: &mut Ui, text: &str, tip: &str, height: f32, active: bool) -> Response {
     let t = Tokens::get(ui.ctx());
-    let galley = hud_galley(ui, text, t.muted);
+    let galley = hud_galley(ui, text, if active { t.ink_strong } else { t.muted });
     let (rect, resp) = ui.allocate_exact_size(vec2(galley.size().x + 20.0, height), Sense::click());
-    let on = active || resp.hovered();
-    let span = Rect::from_center_size(rect.center(), galley.size() + vec2(12.0, 6.0));
-    if on {
-        ui.painter().rect_filled(span, CornerRadius::ZERO, t.invert_bg);
+    let hovered = resp.hovered();
+    let span = Rect::from_center_size(rect.center(), galley.size() + vec2(14.0, 8.0));
+    if active {
+        ui.painter().rect_filled(span, CornerRadius::same(6), t.sunken);
+        ui.painter().rect_stroke(span, CornerRadius::same(6), Stroke::new(1.0, t.line_strong), egui::StrokeKind::Inside);
+    } else if hovered {
+        ui.painter().rect_filled(span, CornerRadius::same(6), t.sunken);
     }
-    paint_centred(ui, rect, galley, if on { t.invert_fg } else { t.muted });
+    paint_centred(ui, rect, galley, if active || hovered { t.ink_strong } else { t.muted });
     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, active, text));
     resp.on_hover_text(tip).on_hover_cursor(egui::CursorIcon::PointingHand)
 }
@@ -120,14 +123,15 @@ pub fn nav_icon(ui: &mut Ui, symbol: &str, tip: &str, height: f32, busy: bool) -
     let (rect, resp) = ui.allocate_exact_size(vec2(height, height), if busy { Sense::hover() } else { Sense::click() });
     let p = ui.painter();
     let hovered = resp.hovered() && !busy;
+    let button_rect = Rect::from_center_size(rect.center(), vec2(30.0, 30.0));
     if hovered {
-        p.rect_filled(rect, CornerRadius::ZERO, t.invert_bg);
+        p.rect_filled(button_rect, CornerRadius::same(6), t.sunken);
+        p.rect_stroke(button_rect, CornerRadius::same(6), Stroke::new(1.0, t.line), egui::StrokeKind::Inside);
     }
-    p.vline(rect.left() + 0.5, rect.y_range(), t.hairline());
     if busy {
         egui::Spinner::new().size(16.0).color(t.muted).paint_at(ui, Rect::from_center_size(rect.center(), vec2(16.0, 16.0)));
     } else {
-        p.text(rect.center(), egui::Align2::CENTER_CENTER, symbol, egui::FontId::proportional(17.0), if hovered { t.invert_fg } else { t.muted });
+        p.text(rect.center(), egui::Align2::CENTER_CENTER, symbol, egui::FontId::proportional(16.0), if hovered { t.ink_strong } else { t.muted });
     }
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, !busy, tip));
     let resp = resp.on_hover_text(tip);
@@ -293,8 +297,10 @@ pub fn hud_link(ui: &mut Ui, text: &str, url: &str) -> Response {
 pub fn badge(ui: &mut Ui, text: &str, color: Color32) -> Response {
     let t = Tokens::get(ui.ctx());
     let galley = caps(ui, text, 10.0, theme::mono(), 1.0, color);
-    let (rect, resp) = ui.allocate_exact_size(vec2(galley.size().x + 12.0, 20.0), Sense::hover());
-    ui.painter().rect(rect, CornerRadius::ZERO, t.sunken, t.hairline(), egui::StrokeKind::Inside);
+    let (rect, resp) = ui.allocate_exact_size(vec2(galley.size().x + 14.0, 22.0), Sense::hover());
+    let bg = Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), if t.dark { 25 } else { 20 });
+    let border = Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), if t.dark { 80 } else { 60 });
+    ui.painter().rect(rect, CornerRadius::same(5), bg, Stroke::new(1.0, border), egui::StrokeKind::Inside);
     paint_centred(ui, rect, galley, color);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, text));
     resp
@@ -326,14 +332,14 @@ pub fn button(ui: &mut Ui, text: &str, kind: Kind, width: f32) -> Response {
     let enabled = ui.is_enabled();
     let hovered = resp.hovered() && enabled;
     let (fill, stroke, color) = match kind {
-        Kind::Primary => (t.invert_bg.gamma_multiply(if hovered { 0.8 } else { 1.0 }), Stroke::NONE, t.invert_fg),
-        Kind::Danger => (t.bad.gamma_multiply(if hovered { 0.8 } else { 1.0 }), Stroke::NONE, Color32::WHITE),
-        Kind::Secondary if hovered => (t.invert_bg, Stroke::NONE, t.invert_fg),
-        Kind::Secondary => (t.bg, Stroke::new(1.0, t.line_strong), t.ink),
+        Kind::Primary => (t.invert_bg.gamma_multiply(if hovered { 0.88 } else { 1.0 }), Stroke::NONE, t.invert_fg),
+        Kind::Danger => (t.bad.gamma_multiply(if hovered { 0.88 } else { 1.0 }), Stroke::NONE, Color32::WHITE),
+        Kind::Secondary if hovered => (t.sunken.lerp_to_gamma(t.ink, 0.08), Stroke::new(1.0, t.line_strong), t.ink_strong),
+        Kind::Secondary => (t.sunken, Stroke::new(1.0, t.line), t.ink),
     };
     // Disabled: the whole button at half strength, like the site's `opacity-50`.
     let fade = |c: Color32| if enabled { c } else { c.gamma_multiply(0.5) };
-    ui.painter().rect(rect, CornerRadius::ZERO, fade(fill), Stroke::new(stroke.width, fade(stroke.color)), egui::StrokeKind::Inside);
+    ui.painter().rect(rect, CornerRadius::same(7), fade(fill), Stroke::new(stroke.width, fade(stroke.color)), egui::StrokeKind::Inside);
     paint_centred(ui, rect, galley, fade(color));
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, text));
     if enabled { resp.on_hover_cursor(egui::CursorIcon::PointingHand) } else { resp }
@@ -355,26 +361,25 @@ pub fn cells<T: PartialEq + Copy>(ui: &mut Ui, value: &mut T, options: &[(T, Cel
     // In a right-to-left parent the row fills from the right: keep the options' order.
     let rtl = ui.layout().prefer_right_to_left();
     let ordered: Vec<&(T, Cell<'_>)> = if rtl { options.iter().rev().collect() } else { options.iter().collect() };
-    let mut rects = Vec::with_capacity(options.len());
     ui.scope(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
+        ui.spacing_mut().item_spacing.x = 4.0;
         for (opt, cell) in ordered {
             let on = *value == *opt;
             let label = hud_galley(ui, cell.label, t.ink);
             let count = cell.count.map(|(n, highlight)| {
-                let c = if on { t.invert_fg.gamma_multiply(0.6) } else { highlight.filter(|_| n > 0).unwrap_or(t.faint) };
+                let c = if on { t.invert_fg.gamma_multiply(0.7) } else { highlight.filter(|_| n > 0).unwrap_or(t.faint) };
                 (hud_galley(ui, &n.to_string(), c), c)
             });
-            let w = label.size().x + count.as_ref().map_or(0.0, |(g, _)| g.size().x + 8.0) + 24.0;
+            let w = label.size().x + count.as_ref().map_or(0.0, |(g, _)| g.size().x + 8.0) + 20.0;
             let (rect, resp) = ui.allocate_exact_size(vec2(w, theme::CONTROL_H), Sense::click());
             let hovered = resp.hovered();
-            let (fill, ink) = match (on, hovered) {
-                (true, _) => (t.invert_bg, t.invert_fg),
-                (false, true) => (t.sunken, t.ink_strong),
-                (false, false) => (Color32::TRANSPARENT, t.muted),
+            let (fill, stroke, ink) = match (on, hovered) {
+                (true, _) => (t.invert_bg, Stroke::NONE, t.invert_fg),
+                (false, true) => (t.sunken.lerp_to_gamma(t.ink, 0.08), Stroke::new(1.0, t.line_strong), t.ink_strong),
+                (false, false) => (t.sunken, Stroke::new(1.0, t.line), t.muted),
             };
-            ui.painter().rect_filled(rect, CornerRadius::ZERO, fill);
-            let text_rect = rect.shrink2(vec2(12.0, 0.0));
+            ui.painter().rect(rect, CornerRadius::same(7), fill, stroke, egui::StrokeKind::Inside);
+            let text_rect = rect.shrink2(vec2(10.0, 0.0));
             let label_w = label.size().x;
             paint_left(ui, text_rect, label, ink);
             if let Some((g, c)) = count {
@@ -389,19 +394,8 @@ pub fn cells<T: PartialEq + Copy>(ui: &mut Ui, value: &mut T, options: &[(T, Cel
                 *value = *opt;
                 changed = true;
             }
-            rects.push(rect);
         }
     });
-    // The hairlines: an outline, and a rule between neighbours.
-    if let (Some(first), Some(last)) = (rects.first(), rects.last()) {
-        let p = ui.painter();
-        p.rect_stroke(first.union(*last), CornerRadius::ZERO, t.hairline(), egui::StrokeKind::Inside);
-        let (top, bottom) = (first.top(), first.bottom());
-        for r in rects.iter().skip(1) {
-            let x = if rtl { r.right() } else { r.left() };
-            p.vline(x, top..=bottom, t.hairline());
-        }
-    }
     changed
 }
 
@@ -496,6 +490,7 @@ pub fn more_menu<R>(ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
 
 /// ArtCraft's social accounts as a row of small monochrome icons (faint, brighter on hover).
 /// In a right-to-left layout they still read left to right.
+#[allow(dead_code)]
 pub fn social_icons(ui: &mut Ui, size: f32) {
     let t = Tokens::get(ui.ctx());
     let rtl = ui.layout().prefer_right_to_left();
@@ -515,23 +510,89 @@ pub fn social_icons(ui: &mut Ui, size: f32) {
     }
 }
 
-/// An app's name as the site sets it: Archivo, with "Craft" in the app's colour.
+/// An app's name: Archivo display font, with the product name highlighted in the brand color.
 pub fn wordmark(ui: &mut Ui, app: &artcraft_launcher_core::CraftApp, size: f32) -> Response {
     let t = Tokens::get(ui.ctx());
-    let (prefix, craft) = app.name.strip_suffix("Craft").map_or((app.name, ""), |p| (p, "Craft"));
+    let (prefix, main) = if let Some(rest) = app.display_name.strip_prefix("Adobe ") {
+        ("Adobe ", rest)
+    } else if let Some(rest) = app.display_name.strip_prefix("Microsoft ") {
+        ("Microsoft ", rest)
+    } else if let Some(rest) = app.display_name.strip_prefix("Autodesk ") {
+        ("Autodesk ", rest)
+    } else {
+        ("", app.display_name)
+    };
+
     let mut job = egui::text::LayoutJob::default();
     let format = |color| egui::TextFormat {
         font_id: egui::FontId::new(size, theme::display()),
         color,
-        extra_letter_spacing: -0.03 * size,
+        extra_letter_spacing: -0.02 * size,
         ..Default::default()
     };
-    job.append(prefix, 0.0, format(t.ink_strong));
-    job.append(craft, 0.0, format(t.app_ink(app)));
-    ui.add(egui::Label::new(job).selectable(false))
+    if !prefix.is_empty() {
+        job.append(prefix, 0.0, format(t.ink_strong));
+    }
+    job.append(main, 0.0, format(t.app_ink(app)));
+    let resp = ui.add(egui::Label::new(job).selectable(false));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, app.name));
+    resp
 }
 
 /// A heading in the display face, tracked in like the site's (`tracking-[-0.02em]`).
 pub fn heading(text: &str, size: f32, color: Color32) -> RichText {
     RichText::new(text).size(size).family(theme::display()).color(color).extra_letter_spacing(-0.02 * size)
 }
+
+/// A luxury VIP User badge (static profile indicator for VIP user).
+pub fn vip_badge(ui: &mut Ui, label: &str) -> Response {
+    let t = Tokens::get(ui.ctx());
+    let gold_text = if t.dark { Color32::from_rgb(250, 204, 21) } else { Color32::from_rgb(180, 83, 9) };
+    let bg = if t.dark { Color32::from_rgba_unmultiplied(234, 179, 8, 25) } else { Color32::from_rgb(254, 249, 195) };
+
+    let text_galley = caps(ui, label, 11.0, theme::mono_bold(), 1.0, gold_text);
+    let crown = "👑 ";
+    let crown_format = egui::TextFormat {
+        font_id: egui::FontId::proportional(12.0),
+        color: gold_text,
+        ..Default::default()
+    };
+    let crown_galley = ui.painter().layout_job(egui::text::LayoutJob::single_section(crown.to_string(), crown_format));
+    let total_w = crown_galley.size().x + text_galley.size().x + 24.0;
+    let (rect, resp) = ui.allocate_exact_size(vec2(total_w, 28.0), Sense::hover());
+
+    let hover_anim = ui.ctx().animate_bool_with_time(resp.id, resp.hovered(), 0.15);
+    if hover_anim > 0.0 {
+        ui.painter().add(
+            egui::epaint::Shadow {
+                offset: [0, 2],
+                blur: (10.0 * hover_anim) as u8,
+                spread: (1.0 * hover_anim) as u8,
+                color: Color32::from_rgba_unmultiplied(234, 179, 8, (70.0 * hover_anim) as u8),
+            }
+            .as_shape(rect, CornerRadius::same(14)),
+        );
+    }
+
+    let border_color = if resp.hovered() {
+        Color32::from_rgb(250, 204, 21)
+    } else {
+        Color32::from_rgba_unmultiplied(234, 179, 8, 140)
+    };
+    ui.painter().rect(rect, CornerRadius::same(14), bg, Stroke::new(1.0, border_color), egui::StrokeKind::Inside);
+
+    let crown_w = crown_galley.size().x;
+    let crown_h = crown_galley.size().y;
+    let text_w = text_galley.size().x;
+    let text_h = text_galley.size().y;
+    let content_w = crown_w + text_w;
+    let start_x = rect.center().x - content_w / 2.0;
+    let crown_pos = egui::pos2(start_x, rect.center().y - crown_h / 2.0);
+    ui.painter().galley(crown_pos, crown_galley, gold_text);
+    let text_pos = egui::pos2(start_x + crown_w, rect.center().y - text_h / 2.0);
+    ui.painter().galley_with_override_text_color(text_pos, text_galley, gold_text);
+
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, label));
+    resp.on_hover_text("Utente VIP Verificato")
+}
+

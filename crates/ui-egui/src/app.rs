@@ -574,7 +574,10 @@ impl LauncherUi {
             .enumerate()
             .filter(|(_, e)| {
                 self.in_filter(e, self.settings.filter)
-                    && (needle.is_empty() || e.app.name.to_lowercase().contains(&needle) || e.app.tagline.to_lowercase().contains(&needle))
+                    && (needle.is_empty()
+                        || e.app.name.to_lowercase().contains(&needle)
+                        || e.app.display_name.to_lowercase().contains(&needle)
+                        || e.app.tagline.to_lowercase().contains(&needle))
             })
             .collect();
         let platform = self.platform;

@@ -1,4 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -19.42 136.34 136.34" role="img" aria-label="ArtCraft">
-  <title>ArtCraft</title>
-  <path fill="#4e7bfb" d="M104.28,49.49L81.55,0h-31.23l-3.17,4.76L14.75,53.63,0,75.85l21.55,21.55,63.79-36.94,16.99,37.04,14.01-21.74-12.06-26.27ZM32.89,65.66l32.42-48.87,10.91,23.77-43.32,25.09Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="GheguCraft">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+    <linearGradient id="g-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded tile -->
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="url(#bg)" stroke="url(#border)" stroke-width="3"/>
+  <!-- Crown accent on top -->
+  <path d="M54 22 L58 30 L64 22 L70 30 L74 22 L73 34 L55 34 Z" fill="#fbbf24"/>
+  <!-- Modern Geometric G Monogram -->
+  <path d="M86 46 C79 36 68 32 58 32 C40 32 28 45 28 64 C28 83 40 96 58 96 C74 96 84 86 87 72 L58 72 L58 60 L98 60 C99 78 88 106 58 106 C32 106 16 88 16 64 C16 40 32 22 58 22 C73 22 88 28 96 40 Z" fill="url(#g-grad)"/>
 </svg>

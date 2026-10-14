@@ -3,7 +3,7 @@
 use crate::i18n::fmt;
 use artcraft_launcher_core::protocol::Command;
 use artcraft_launcher_core::{Os, PackageKind};
-use egui::{RichText, vec2};
+use egui::{CornerRadius, RichText, vec2};
 
 use crate::app::{Dialog, Host, LauncherUi};
 use crate::settings::{CheckEvery, Settings};
@@ -20,7 +20,7 @@ impl LauncherUi {
         // An area is laid out in the size it had last frame, so dialogs can't share one id: the
         // uninstall prompt would open as tall as Settings and never shrink (#88).
         let modal = egui::Modal::new(egui::Id::new("dialog").with(dialog.key()))
-            .frame(egui::Frame::new().fill(t.bg).stroke(egui::Stroke::new(1.0, t.line_strong)).shadow(theme::shadow(&t)).inner_margin(24));
+            .frame(egui::Frame::new().fill(t.sunken).corner_radius(CornerRadius::same(12)).stroke(egui::Stroke::new(1.0, t.line_strong)).shadow(theme::shadow(&t)).inner_margin(24));
         let mut close = false;
         let response = match &dialog {
             Dialog::Notes(id) => modal.show(ctx, |ui| close = self.notes_dialog(ui, id)),
@@ -38,7 +38,7 @@ impl LauncherUi {
         let Some(alert) = self.alerts.iter().find(|a| !self.settings.dismissed_notices.contains(&a.id)).cloned() else { return };
         let t = Tokens::get(ctx);
         let modal = egui::Modal::new(egui::Id::new("feed_alert").with(&alert.id))
-            .frame(egui::Frame::new().fill(t.bg).stroke(egui::Stroke::new(1.0, t.line_strong)).shadow(theme::shadow(&t)).inner_margin(24));
+            .frame(egui::Frame::new().fill(t.sunken).corner_radius(CornerRadius::same(12)).stroke(egui::Stroke::new(1.0, t.line_strong)).shadow(theme::shadow(&t)).inner_margin(24));
         let mut ok = false;
         modal.show(ctx, |ui| {
             ui.set_width(440.0f32.min(ctx.content_rect().width() - 80.0));
@@ -89,7 +89,7 @@ impl LauncherUi {
         let Some(release) = entry.release().cloned() else { return true };
         ui.set_width(560.0f32.min(ui.ctx().content_rect().width() - 80.0));
         let date = release.published_at.map(|d| fmt(tl!("Released {date}"), &[("date", &crate::views::date_text(d))])).unwrap_or_default();
-        Self::title(ui, crate::icons::app(id), &format!("{} {}", entry.app.name, release.version_label()), &date);
+        Self::title(ui, crate::icons::app(id), &format!("{} {}", entry.app.display_name, release.version_label()), &date);
         egui::ScrollArea::vertical().max_height(ui.ctx().content_rect().height() * 0.6).show(ui, |ui| {
             if release.notes.is_empty() {
                 ui.label(tl!("These notes weren't fetched (GitHub's request limit was reached). They're on the release page."));
@@ -146,7 +146,7 @@ impl LauncherUi {
         let Some(entry) = self.entry(id).cloned() else { return true };
         let t = Tokens::get(ui.ctx());
         ui.set_width(420.0);
-        Self::title(ui, crate::icons::app(id), &fmt(tl!("Uninstall {name}?"), &[("name", entry.app.name)]), "");
+        Self::title(ui, crate::icons::app(id), &fmt(tl!("Uninstall {name}?"), &[("name", entry.app.display_name)]), "");
         let how = match entry.installed.as_ref().map(|i| i.source) {
             Some(artcraft_launcher_core::InstallSource::MacApp) => tl!("The app will be moved to the Trash. Your documents and settings stay."),
             Some(artcraft_launcher_core::InstallSource::Msi) => {
@@ -186,7 +186,7 @@ impl LauncherUi {
         ui.set_max_height((viewport.height() - 80.0).max(0.0));
         ui.spacing_mut().scroll = egui::style::ScrollStyle { foreground_color: true, ..egui::style::ScrollStyle::solid() };
         let title_top = ui.cursor().top();
-        Self::title(ui, Some(crate::icons::artcraft_mark()), tl!("Settings"), &format!("ArtCraft Launcher {}", env!("CARGO_PKG_VERSION")));
+        Self::title(ui, Some(crate::icons::artcraft_mark()), tl!("Settings"), &format!("GheguCraft {}", env!("CARGO_PKG_VERSION")));
         let title_height = ui.cursor().top() - title_top;
         let quit_width = widgets::button_width(ui, tl!("Quit ArtCraft Launcher"), 0.0);
         let done_width = widgets::button_width(ui, tl!("Done"), 90.0);
@@ -336,28 +336,6 @@ impl LauncherUi {
             }
         }
 
-        section(ui, tl!("Community"));
-        ui.label(RichText::new(tl!("Questions, ideas and news from the ArtCraft team")).color(t.muted));
-        ui.add_space(6.0);
-        ui.horizontal_wrapped(|ui| {
-            use artcraft_launcher_core::catalog::{DISCORD_URL, GITHUB_URL, WEBSITE_URL};
-            if widgets::button(ui, tl!("Join the Discord"), Kind::Primary, 0.0).on_hover_text(DISCORD_URL).clicked() {
-                ui.ctx().open_url(egui::OpenUrl::new_tab(DISCORD_URL));
-            }
-            if widgets::button(ui, tl!("Website"), Kind::Secondary, 0.0).on_hover_text(WEBSITE_URL).clicked() {
-                ui.ctx().open_url(egui::OpenUrl::new_tab(WEBSITE_URL));
-            }
-            if widgets::button(ui, tl!("GitHub"), Kind::Secondary, 0.0).on_hover_text(GITHUB_URL).clicked() {
-                ui.ctx().open_url(egui::OpenUrl::new_tab(GITHUB_URL));
-            }
-            // Wrap the social links as a group so their icons stay together.
-            let count = artcraft_launcher_core::catalog::SOCIAL.len() as f32;
-            let width = count * (16.0 + 8.0) + (count - 1.0).max(0.0) * 4.0;
-            ui.allocate_ui_with_layout(vec2(width, theme::CONTROL_H), egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                ui.spacing_mut().item_spacing.x = 4.0;
-                widgets::social_icons(ui, 16.0);
-            });
-        });
 
         section(ui, tl!("Appearance"));
         let mut theme_choice = self.settings.theme;

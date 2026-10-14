@@ -30,8 +30,10 @@ impl AppGroup {
 pub struct CraftApp {
     /// Machine name: repo, binary, package and asset stem (`photocraft`).
     pub id: &'static str,
-    /// Display name (`PhotoCraft`).
+    /// Upstream package name (`PhotoCraft`).
     pub name: &'static str,
+    /// Real-world display name for users (`Adobe Photoshop`).
+    pub display_name: &'static str,
     /// What it's for, in a few words (English; the UI translates it by app id).
     pub tagline: &'static str,
     pub group: AppGroup,
@@ -86,12 +88,13 @@ impl CraftApp {
 const fn app(
     id: &'static str,
     name: &'static str,
+    display_name: &'static str,
     tagline: &'static str,
     group: AppGroup,
     [color, ink_light, ink_dark]: [[u8; 3]; 3],
     repo: &'static str,
 ) -> CraftApp {
-    CraftApp { id, name, tagline, group, color, ink_light, ink_dark, repo, former_ids: &[], former_names: &[] }
+    CraftApp { id, name, display_name, tagline, group, color, ink_light, ink_dark, repo, former_ids: &[], former_names: &[] }
 }
 
 /// The Craft App Suite, in display order: the seven classic apps, then the six new ones.
@@ -99,6 +102,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "photocraft",
         "PhotoCraft",
+        "Adobe Photoshop",
         "Image editing",
         AppGroup::Classic,
         [[0x2f, 0x7b, 0xf5], [0x1a, 0x5b, 0xc4], [0x7f, 0xb0, 0xff]],
@@ -107,6 +111,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "vectorcraft",
         "VectorCraft",
+        "Adobe Illustrator",
         "Vector illustration",
         AppGroup::Classic,
         [[0xe8, 0x57, 0x3f], [0xb8, 0x3a, 0x24], [0xff, 0x8a, 0x70]],
@@ -115,6 +120,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "filmcraft",
         "FilmCraft",
+        "Adobe Premiere Pro",
         "Video editing, color and sound",
         AppGroup::Classic,
         [[0x8b, 0x5c, 0xf6], [0x6a, 0x3f, 0xd6], [0xb6, 0x9c, 0xff]],
@@ -123,6 +129,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "lightcraft",
         "LightCraft",
+        "Adobe Lightroom",
         "Photo library and raw development",
         AppGroup::Classic,
         [[0xf2, 0xa5, 0x16], [0x8a, 0x58, 0x00], [0xff, 0xc1, 0x4d]],
@@ -134,6 +141,7 @@ pub const SUITE: [CraftApp; 13] = [
         ..app(
             "pdfcraft",
             "PdfCraft",
+            "Adobe Acrobat",
             "Reading, organizing and protecting PDFs",
             AppGroup::Classic,
             [[0x12, 0xa5, 0x8a], [0x0a, 0x75, 0x63], [0x3f, 0xd6, 0xb8]],
@@ -143,6 +151,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "effectcraft",
         "EffectCraft",
+        "Adobe After Effects",
         "Motion graphics and visual effects",
         AppGroup::Classic,
         [[0xe0, 0x36, 0x8f], [0xb0, 0x20, 0x6c], [0xff, 0x7a, 0xb8]],
@@ -151,6 +160,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "designcraft",
         "DesignCraft",
+        "Adobe InDesign",
         "Page layout and publishing",
         AppGroup::Classic,
         [[0x7b, 0xb5, 0x1c], [0x45, 0x70, 0x08], [0xa6, 0xe0, 0x4a]],
@@ -159,6 +169,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "wordcraft",
         "WordCraft",
+        "Microsoft Word",
         "Writing and document design",
         AppGroup::New,
         [[0x3f, 0x5f, 0xe0], [0x2a, 0x44, 0xb8], [0x8e, 0xa2, 0xff]],
@@ -167,6 +178,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "deckcraft",
         "DeckCraft",
+        "Microsoft PowerPoint",
         "Presentations and slide shows",
         AppGroup::New,
         [[0xf0, 0x7a, 0x1e], [0xa8, 0x4f, 0x0a], [0xff, 0xa0, 0x60]],
@@ -175,6 +187,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "gridcraft",
         "GridCraft",
+        "Microsoft Excel",
         "Spreadsheets and data",
         AppGroup::New,
         [[0x1f, 0x9d, 0x55], [0x12, 0x70, 0x3a], [0x4f, 0xd6, 0x8a]],
@@ -183,6 +196,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "cadcraft",
         "CADCraft",
+        "Autodesk AutoCAD",
         "Computer-aided design and drafting",
         AppGroup::New,
         [[0x3e, 0xa6, 0xe8], [0x1a, 0x6f, 0xa8], [0x7c, 0xc8, 0xff]],
@@ -191,6 +205,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "soundcraft",
         "SoundCraft",
+        "Audacity",
         "Recording, editing and mixing audio",
         AppGroup::New,
         [[0x1f, 0xa5, 0xc9], [0x0e, 0x72, 0x90], [0x5f, 0xd0, 0xee]],
@@ -199,6 +214,7 @@ pub const SUITE: [CraftApp; 13] = [
     app(
         "figcraft",
         "FigCraft",
+        "Figma",
         "Interface design and prototyping",
         AppGroup::New,
         [[0x02, 0xda, 0x96], [0x04, 0x7a, 0x56], [0x4f, 0xe8, 0xb6]],
@@ -231,14 +247,15 @@ pub const DISCORD_URL: &str = "https://discord.gg/artcraft";
 pub const LAUNCHER: CraftApp = app(
     "artcraft-launcher",
     "ArtCraft Launcher",
+    "GheguCraft",
     "Installs and updates the Craft App Suite",
     AppGroup::New,
     [[0x0b, 0x0b, 0x0c], [0x0b, 0x0b, 0x0c], [0xf2, 0xf1, 0xee]],
-    "storytold/craft-launcher",
+    "chicut01-web/GheguCraft",
 );
 
 /// The launcher's own repo, checked so it can say when a newer launcher is out.
-pub const LAUNCHER_REPO: &str = "storytold/craft-launcher";
+pub const LAUNCHER_REPO: &str = "chicut01-web/GheguCraft";
 /// The launcher's own asset stem.
 pub const LAUNCHER_ID: &str = "artcraft-launcher";
 

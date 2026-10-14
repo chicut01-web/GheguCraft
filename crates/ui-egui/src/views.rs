@@ -77,23 +77,32 @@ impl LauncherUi {
             if bar == TitleBar::MacOs {
                 ui.add_space(TRAFFIC_LIGHTS_W);
             }
-            // The ArtCraft wordmark exactly as supplied, in its own cell.
-            let logo = vec2(14.0 * crate::icons::ARTCRAFT_LOGO_ASPECT, 14.0);
-            let (cell, _) = ui.allocate_exact_size(vec2(logo.x + 40.0, h), Sense::hover());
-            egui::Image::new(crate::icons::artcraft_logo(t.dark)).alt_text(tl!("ArtCraft")).paint_at(ui, Rect::from_center_size(cell.center(), logo));
+            // GheguCraft Brand Name and Mark
+            let mark_size = vec2(20.0, 20.0);
+            let (cell, _) = ui.allocate_exact_size(vec2(mark_size.x + 20.0, h), Sense::hover());
+            egui::Image::new(crate::icons::artcraft_mark()).paint_at(ui, Rect::from_center_size(cell.center(), mark_size));
+            ui.add_space(2.0);
+            ui.label(widgets::heading("GheguCraft", 18.0, t.ink_strong));
+            ui.add_space(14.0);
+            widgets::rule(ui, h);
+            ui.add_space(14.0);
+            widgets::badge(ui, "Special Edition", t.accent);
+
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if bar == TitleBar::Custom {
                     widgets::window_buttons(ui, h);
                 }
+                ui.add_space(8.0);
+                widgets::vip_badge(ui, "Utente VIP: Ghegu");
+                ui.add_space(8.0);
+                widgets::rule(ui, h);
+                ui.add_space(6.0);
+
                 if widgets::nav_icon(ui, "⚙", tl!("Settings"), h, false).clicked() {
                     self.dialog = Some(Dialog::Settings);
                 }
                 if widgets::nav_icon(ui, "⟳", tl!("Check for updates"), h, self.checking).clicked() {
                     self.check_now();
-                }
-                ui.add_space(6.0);
-                if widgets::nav_link(ui, tl!("Discord"), tl!("Join the ArtCraft community on Discord"), h, false).clicked() {
-                    ui.ctx().open_url(egui::OpenUrl::new_tab(artcraft_launcher_core::catalog::DISCORD_URL));
                 }
                 ui.add_space(6.0);
                 widgets::rule(ui, h);
@@ -316,30 +325,23 @@ impl LauncherUi {
             Some(p) => fmt(tl!("Downloads for {platform}"), &[("platform", &p.label())]),
             None => tl!("No downloads for this system").into(),
         };
-        use artcraft_launcher_core::catalog::{DISCORD_URL, GITHUB_URL, SOCIAL, WEBSITE_URL};
-        let links = [(tl!("Discord"), DISCORD_URL), (tl!("GitHub"), GITHUB_URL), (tl!("Website"), WEBSITE_URL)];
-        let (icon, link_gap) = (13.0, 16.0);
-        // The links and icons on the right keep their size; the status on the left gets what is
+        use artcraft_launcher_core::catalog::GITHUB_URL;
+        let links = [(tl!("GitHub"), GITHUB_URL)];
+        let link_gap = 16.0;
+        // The links on the right keep their size; the status on the left gets what is
         // left and is cut short with "…", never drawn under them. A narrow window drops the
         // platform label first, so the status keeps room to be read.
         let spacing = ui.spacing().item_spacing.x;
         let links_w: f32 =
             links.iter().map(|(text, _)| widgets::hud_galley(ui, &format!("{text} ↗"), t.muted).size().x + link_gap).sum::<f32>() - link_gap;
-        let icons_w = SOCIAL.len() as f32 * (icon + 8.0);
         let platform_w = widgets::hud_galley(ui, &platform, t.faint).size().x + 16.0 + spacing;
-        let left_w = ui.available_width() - icons_w - 12.0 - links_w - 16.0 - 3.0 * spacing;
+        let left_w = ui.available_width() - links_w - 16.0 - 2.0 * spacing;
         let show_platform = left_w - platform_w >= FOOTER_MIN_STATUS_W;
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             if show_platform {
                 widgets::hud(ui, &platform, t.faint);
                 ui.add_space(16.0);
             }
-            // Right to left, so this reads: Website · GitHub · Discord, then the social icons.
-            ui.scope(|ui| {
-                ui.spacing_mut().item_spacing.x = 0.0;
-                widgets::social_icons(ui, icon);
-            });
-            ui.add_space(12.0);
             ui.scope(|ui| {
                 ui.spacing_mut().item_spacing.x = link_gap;
                 for (text, url) in links {
@@ -376,18 +378,23 @@ impl LauncherUi {
 
     pub(crate) fn grid(&mut self, ui: &mut Ui, ids: &[&'static str]) {
         let width = ui.available_width();
-        // Neighbouring cards share their 1 px hairline, like the site's `gap-px` grid.
-        let cols = ((width / CARD_MIN_W).floor() as usize).max(1);
-        let card_w = (width + (cols as f32 - 1.0)) / cols as f32;
+        const CARD_GAP: f32 = 14.0;
+        let cols = (((width + CARD_GAP) / (CARD_MIN_W + CARD_GAP)).floor() as usize).max(1);
+        let total_gap = cols.saturating_sub(1) as f32 * CARD_GAP;
+        let card_w = ((width - total_gap) / cols as f32).max(CARD_MIN_W);
         let rows = ids.len().div_ceil(cols);
-        let height = rows as f32 * (CARD_H - 1.0) + 1.0;
+        let height = if rows > 0 {
+            rows as f32 * CARD_H + (rows - 1) as f32 * CARD_GAP
+        } else {
+            0.0
+        };
         let (area, _) = ui.allocate_exact_size(vec2(width, height), Sense::hover());
         for (i, id) in ids.iter().enumerate() {
             let (row, col) = (i / cols, i % cols);
-            let min = area.min + vec2(col as f32 * (card_w - 1.0), row as f32 * (CARD_H - 1.0));
+            let min = area.min + vec2(col as f32 * (card_w + CARD_GAP), row as f32 * (CARD_H + CARD_GAP));
             self.card(ui, id, Rect::from_min_size(min, vec2(card_w, CARD_H)));
         }
-        ui.add_space(24.0);
+        ui.add_space(28.0);
     }
 
     fn card(&mut self, ui: &mut Ui, id: &str, rect: Rect) {
@@ -407,20 +414,58 @@ impl LauncherUi {
                 self.detail = Some(id.to_string());
             }
         }
-        let painter = ui.painter_at(rect.expand(16.0));
-        // A faint wash in the app's colour fades in under the pointer.
-        let fill = t.bg.lerp_to_gamma(app_color, 0.05 * lift);
-        painter.rect(rect, CornerRadius::ZERO, fill, t.hairline(), egui::StrokeKind::Inside);
-        // On hover, a 2 px rule in the app's colour wipes in from the left along the top, inside the
-        // hairlines the card shares with its neighbours (the site's rule sits within its grid gaps).
+        let painter = ui.painter_at(rect.expand(24.0));
+        const CARD_RADIUS: CornerRadius = CornerRadius::same(12);
+
+        // Soft ambient drop shadow at rest
+        painter.add(
+            egui::epaint::Shadow {
+                offset: [0, 3],
+                blur: 10,
+                spread: 0,
+                color: Color32::from_black_alpha(if t.dark { 50 } else { 20 }),
+            }
+            .as_shape(rect, CARD_RADIUS),
+        );
+
+        // On hover, emit a colored glow aura matching the app's identity
         if lift > 0.0 {
-            let inside = rect.shrink(1.0);
-            painter.rect_filled(Rect::from_min_size(inside.min, vec2(inside.width() * lift, 2.0)), CornerRadius::ZERO, app_color);
+            let glow_color = Color32::from_rgba_unmultiplied(
+                app_color.r(),
+                app_color.g(),
+                app_color.b(),
+                (70.0 * lift) as u8,
+            );
+            painter.add(
+                egui::epaint::Shadow {
+                    offset: [0, (4.0 * lift) as i8],
+                    blur: (18.0 * lift) as u8,
+                    spread: (2.0 * lift) as u8,
+                    color: glow_color,
+                }
+                .as_shape(rect, CARD_RADIUS),
+            );
+        }
+
+        // Sleek elevated surface with subtle wash in app's color on hover
+        let fill = t.sunken.lerp_to_gamma(app_color, 0.08 * lift);
+        let border_color = t.line.lerp_to_gamma(app_color, 0.70 * lift);
+        painter.rect(rect, CARD_RADIUS, fill, Stroke::new(1.0, border_color), egui::StrokeKind::Inside);
+
+        // On hover, a vivid top accent line wipes in from the left with rounded corners
+        if lift > 0.0 {
+            let top_corners = CornerRadius {
+                nw: 12,
+                ne: if lift >= 0.98 { 12 } else { 0 },
+                sw: 0,
+                se: 0,
+            };
+            painter.rect_filled(Rect::from_min_size(rect.min, vec2(rect.width() * lift, 3.0)), top_corners, app_color);
         }
 
         // The top strip: the app's number in its colour, and its pages.
         let strip = Rect::from_min_size(rect.min, vec2(rect.width(), STRIP_H));
-        painter.hline(strip.x_range(), strip.bottom() - 0.5, t.hairline());
+        painter.hline(strip.x_range(), strip.bottom() - 0.5, Stroke::new(1.0, t.line.lerp_to_gamma(app_color, 0.25 * lift)));
         let number = SUITE.iter().position(|a| a.id == app.id).map_or_else(String::new, |i| format!("{:02}", i + 1));
         {
             let mut strip_ui = ui.new_child(
@@ -430,7 +475,6 @@ impl LauncherUi {
             strip_ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.spacing_mut().item_spacing.x = 16.0;
                 widgets::hud_link(ui, tl!("GitHub"), &app.repo_url());
-                widgets::hud_link(ui, tl!("Website"), &app.website());
             });
         }
 
@@ -506,7 +550,7 @@ impl LauncherUi {
             let y = ui.max_rect().bottom() + ui.spacing().item_spacing.y / 2.0;
             ui.ctx().layer_painter(ui.layer_id()).with_clip_rect(clip).hline(span, y, t.hairline());
         };
-        egui::Frame::new().fill(t.bg).stroke(t.hairline()).inner_margin(egui::Margin::symmetric(16, 0)).show(ui, |ui| {
+        egui::Frame::new().fill(t.sunken).corner_radius(CornerRadius::same(10)).stroke(t.hairline()).inner_margin(egui::Margin::symmetric(16, 0)).show(ui, |ui| {
             TableBuilder::new(ui)
                 .striped(false)
                 .vscroll(false)
@@ -873,7 +917,6 @@ impl LauncherUi {
                         ui.close();
                     }
                 };
-                link(ui, tl!("Website"), entry.app.website());
                 link(ui, tl!("GitHub repository"), entry.app.repo_url());
                 link(ui, tl!("All releases"), entry.app.releases_url());
             }

@@ -1,11 +1,13 @@
 //! [`NativeBackend`]: the desktop implementation of the UI's [`Backend`].
 
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
-use artcraft_launcher_core::catalog::{LAUNCHER, LAUNCHER_ID};
+use artcraft_launcher_core::catalog::LAUNCHER_ID;
 use artcraft_launcher_core::feed::{Feed, FeedAnswer};
 use artcraft_launcher_core::platform::{Arch, Os, Platform, pick_asset};
 use artcraft_launcher_core::protocol::{
@@ -232,17 +234,15 @@ impl NativeBackend {
             let (feed, fallback) = if let Some(base) = &mirror {
                 // A local mirror answers for everything: GitHub is never asked.
                 (local_feed(&http, base), Fallback { trust_feed: true, github_every: GITHUB_FALLBACK_EVERY })
-            } else if pre {
-                // The feed serves stable releases only; with pre-releases on, GitHub decides.
-                (None, Fallback { trust_feed: false, github_every: EARLY_GITHUB_EVERY })
             } else {
-                feed_and_fallback(&http, &paths, &shared)
+                // Direct GitHub releases: bypass remote feed to keep app completely private and direct
+                (None, Fallback { trust_feed: false, github_every: EARLY_GITHUB_EVERY })
             };
             if let Some(f) = &feed {
                 shared.emit(Event::Notices { announcements: f.announcements.clone(), alerts: f.alerts.clone() });
             }
             let now = crate::now();
-            let queue = Mutex::new(SUITE.iter().chain(std::iter::once(&LAUNCHER)).collect::<Vec<&CraftApp>>());
+            let queue = Mutex::new(SUITE.iter().chain(std::iter::once(&artcraft_launcher_core::catalog::LAUNCHER)).collect::<Vec<&CraftApp>>());
             let sources = Mutex::new(Vec::new());
             std::thread::scope(|scope| {
                 for _ in 0..WORKERS {

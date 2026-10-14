@@ -9,11 +9,11 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>ArtCraft Launcher</string>
+  <string>@APP_NAME@</string>
   <key>CFBundleName</key>
-  <string>ArtCraft Launcher</string>
+  <string>@APP_NAME@</string>
   <key>CFBundleExecutable</key>
-  <string>ArtCraft Launcher</string>
+  <string>@APP_NAME@</string>
   <key>CFBundleIdentifier</key>
   <string>ai.storyteller.artcraft-launcher</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -31,7 +31,7 @@
   <key>ArtCraftLauncherBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>ArtCraft Launcher</string>
+  <string>@APP_NAME@</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.utilities</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. -->
