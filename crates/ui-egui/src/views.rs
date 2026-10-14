@@ -5,7 +5,7 @@ use artcraft_launcher_core::details::AppDetails;
 use artcraft_launcher_core::platform::pick_asset;
 use artcraft_launcher_core::protocol::{Command, JobPhase};
 use artcraft_launcher_core::status::AppStatus;
-use artcraft_launcher_core::{AppGroup, SUITE, time};
+use artcraft_launcher_core::{SUITE, time};
 use egui::{Color32, CornerRadius, FontId, Rect, RichText, Sense, Stroke, Ui, vec2};
 
 use crate::app::{Dialog, LauncherUi, TitleBar};
@@ -77,12 +77,12 @@ impl LauncherUi {
             if bar == TitleBar::MacOs {
                 ui.add_space(TRAFFIC_LIGHTS_W);
             }
-            // GheguCraft Brand Name and Mark
-            let mark_size = vec2(20.0, 20.0);
-            let (cell, _) = ui.allocate_exact_size(vec2(mark_size.x + 20.0, h), Sense::hover());
+            // GheguCraft Brand Name and Avatar Logo
+            let mark_size = vec2(30.0, 30.0);
+            let (cell, _) = ui.allocate_exact_size(vec2(mark_size.x + 12.0, h), Sense::hover());
             egui::Image::new(crate::icons::artcraft_mark()).paint_at(ui, Rect::from_center_size(cell.center(), mark_size));
             ui.add_space(2.0);
-            ui.label(widgets::heading("GheguCraft", 18.0, t.ink_strong));
+            ui.label(widgets::heading("GheguCraft", 20.0, t.ink_strong));
             ui.add_space(14.0);
             widgets::rule(ui, h);
             ui.add_space(14.0);
@@ -507,9 +507,6 @@ impl LauncherUi {
                 ui.spacing_mut().interact_size.y = 0.0;
                 ui.horizontal(|ui| {
                     widgets::wordmark(ui, app, 22.0);
-                    if app.group == AppGroup::New {
-                        widgets::badge(ui, tl!("New"), t.app_ink(app));
-                    }
                 });
                 ui.add(egui::Label::new(RichText::new(tr_ctx(current(), app.id, app.tagline)).font(tagline.clone()).color(t.muted)).truncate());
             });

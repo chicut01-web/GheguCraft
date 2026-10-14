@@ -47,7 +47,7 @@ pub fn social(service: &str) -> Option<ImageSource<'static>> {
     })
 }
 
-/// The ArtCraft "A" mark in blue, as supplied: the launcher's app icon and getartcraft.com's favicon.
+/// GheguCraft avatar mark (photo of Ghegu as a child).
 pub fn artcraft_mark() -> ImageSource<'static> {
-    egui::include_image!("../../../docs/brand/artcraft-mark.svg")
+    egui::include_image!("../../../docs/brand/ghegu-avatar.png")
 }
